@@ -764,7 +764,7 @@ class esxiFreeScraper(object):
         if 'scsi' in hardware:
             vmxDict.update({"scsi0.virtualDev": hardware['scsi']})
         if 'more_pci' in hardware and hardware['more_pci'] in [True, 'TRUE', 'True', 'true', 'yes']:
-            vmxDict.update(esxiFreeScraper.vmx_skeleton_more_pci)            
+            vmxDict.update(esxiFreeScraper.vmx_skeleton_more_pci)
 
         # CDROM settings
         if cdrom:
@@ -871,6 +871,11 @@ class esxiFreeScraper(object):
         else:
             if len(bootDisks) == 1:
                 return ("Boot disk parameters defined for cloned VM.  Ambiguous requirement - not supported.")
+
+        # Custom values
+        if customvalues:
+            for customParam in customvalues:
+                vmxDict.update({customParam['key']: customParam['value']})
 
         # write the vmx
         self.put_vmx(vmxDict, vmPathDest + "/" + self.name + ".vmx")
