@@ -718,7 +718,7 @@ class esxiFreeScraper(object):
         if guest_id:
             vmxDict.update({"guestos": guest_id})
         vmxDict.update({"displayname": self.name})
-        vmxDict.update({"vm.createdate": time.time()})
+        vmxDict.update({"vm.createdate": int(time.time())})
 
         if annotation:
             vmxDict.update({"annotation": annotation})
