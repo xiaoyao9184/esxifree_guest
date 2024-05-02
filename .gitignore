@@ -3,3 +3,7 @@
 
 # 
 tests/passwd.yml
+# pixi environments
+.pixi
+*.egg-info
+
