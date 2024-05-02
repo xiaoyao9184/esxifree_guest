@@ -14,6 +14,7 @@ hardware:
   version: 15
   num_cpus: 2
   memory_mb: 4096
+  memory_reservation_lock: true
   firmware: efi
 disks:
   - size_gb: 20
@@ -44,6 +45,12 @@ networks:
               - 192.168.1.2
             search:
               - local.dougalseeley.com
+passthru:
+  - id: '0000:02:00.0'
+  # - id: '0000:03:00.0'
+  # - id: '0000:04:00.0'
+  # - id: '0000:05:00.0'
+  # - id: '0000:06:00.0'
 cloudinit_userdata:
   #cloud-config
   runcmd:

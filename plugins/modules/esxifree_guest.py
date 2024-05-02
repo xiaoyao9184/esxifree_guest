@@ -254,6 +254,17 @@ options:
     - Specify datastore or datastore cluster to provision virtual machine.
     type: str
     required: true
+  passthru:
+    description:
+    - A list of passthru to add.
+    required: false
+    type: list
+    suboptions:
+      id:
+        description:
+        - The id of PCI, like '00000:002:00.0'.
+        required: true
+        type: str
 '''
 
 EXAMPLES = r'''
@@ -607,7 +618,7 @@ class esxiFreeScraper(object):
             pass
         sftp_cnx.putfo(vmxStr, vmxPath, file_size=0, callback=None, confirm=True)
 
-    def create_vm(self, vmTemplate=None, annotation=None, datastore=None, hardware=None, guest_id=None, disks=None, cdrom=None, customvalues=None, networks=None, cloudinit_userdata=None):
+    def create_vm(self, vmTemplate=None, annotation=None, datastore=None, hardware=None, guest_id=None, disks=None, cdrom=None, customvalues=None, networks=None, cloudinit_userdata=None, passthru=None):
         vmPathDest = "/vmfs/volumes/" + datastore + "/" + self.name
 
         ## Sanity checks
@@ -747,6 +758,35 @@ class esxiFreeScraper(object):
                         vmxDict.update({"ide0:" + str(newCDRomIdx) +  ".filename": newCDRom['iso_path']})
                         vmxDict.update({"ide0:" + str(newCDRomIdx) +  ".present": "TRUE"})
                         vmxDict.update({"ide0:" + str(newCDRomIdx) +  ".startconnected": "TRUE"})
+
+        # PCI Passthru
+        if passthru:
+            try:
+                (stdin, stdout, stderr) = self.esxiCnx.exec_command("esxcli system uuid get")
+                systemId = stdout.read().decode('UTF-8').lstrip("\r\n").rstrip(" \r\n")
+
+                for passthrusIdx, passthrusParam in enumerate(passthru):
+                    id = passthrusParam['id']
+                    SegmBuDeF = id.split(":")
+                    try:
+                        (stdin, stdout, stderr) = self.esxiCnx.exec_command("lspci -p | grep '" + id + "' | awk '{print $2}'")
+                        VendDvid = stdout.read().decode('UTF-8').lstrip("\r\n").rstrip(" \r\n").split(":")
+                        vendorId = VendDvid[0]
+                        deviceId = VendDvid[1]
+                        segm = '0' + SegmBuDeF[0]
+                        bu = '0' + SegmBuDeF[1]
+                        de_f = SegmBuDeF[2]
+                        newId = segm + ':' + bu + ':' + de_f
+
+                        vmxDict.update({"pciPassthru" + str(passthrusIdx) + ".id": newId})
+                        vmxDict.update({"pciPassthru" + str(passthrusIdx) + ".vendorId": "0x" + vendorId})
+                        vmxDict.update({"pciPassthru" + str(passthrusIdx) + ".deviceId": "0x" + deviceId})
+                        vmxDict.update({"pciPassthru" + str(passthrusIdx) + ".systemId": systemId})
+                        vmxDict.update({"pciPassthru" + str(passthrusIdx) + ".present": "TRUE"})
+                    except IOError as e:
+                        pass
+            except IOError as e:
+                pass
 
         # Network settings
         cloudinit_nets = {"version": 2}
@@ -927,6 +967,7 @@ def main():
         "disks": {"type": "list", "default": [{"boot": True, "size_gb": 16, "type": "thin"}]},
         "cdrom": {"type": "list", "default": []},
         "networks": {"type": "list", "default": [{"networkName": "VM Network", "virtualDev": "vmxnet3"}]},
+        "passthru": {"type": "list", "default": []},
         "customvalues": {"type": "list", "default": []},
         "wait": {"type": "bool", "default": True},
         "wait_timeout": {"type": "int", "default": 180}
@@ -1125,7 +1166,7 @@ def main():
                 if re.search('Powered off', stdout.read().decode('UTF-8')) is None:
                     module.fail_json(msg="Template VM must be powered off before cloning")
 
-            createVmResult = iScraper.create_vm(module.params['template'], module.params['annotation'], module.params['datastore'], module.params['hardware'], module.params['guest_id'], module.params['disks'], module.params['cdrom'], module.params['customvalues'], module.params['networks'], module.params['cloudinit_userdata'])
+            createVmResult = iScraper.create_vm(module.params['template'], module.params['annotation'], module.params['datastore'], module.params['hardware'], module.params['guest_id'], module.params['disks'], module.params['cdrom'], module.params['customvalues'], module.params['networks'], module.params['cloudinit_userdata'], module.params['passthru'])
             if createVmResult != None:
                 module.fail_json(msg="Failed to create_vm: %s" % createVmResult)
 
