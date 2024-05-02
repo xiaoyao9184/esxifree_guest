@@ -128,6 +128,11 @@ options:
         - UEFI or BIOS, emtpy is BIOS, 'efi' is UEFI.
         type: str
         required: false
+      scsi:
+        description: 
+        - Override the SCSI controller scsi0 default value 'pvscsi'.
+        type: str
+        required: false
   guest_id:
     description:
     - Set the guest ID.
@@ -559,14 +564,14 @@ class esxiFreeScraper(object):
     vmx_skeleton['pciBridge7.present'] = "TRUE"
     vmx_skeleton['pciBridge7.virtualDev'] = "pcieRootPort"
     vmx_skeleton['pciBridge7.functions'] = "8"
+    vmx_skeleton['scsi0.present'] = "TRUE"
+    vmx_skeleton['scsi0.virtualDev'] = "pvscsi"
     vmx_skeleton['vmci0.present'] = "TRUE"
     vmx_skeleton['hpet0.present'] = "TRUE"
     vmx_skeleton['floppy0.present'] = "FALSE"
     vmx_skeleton['usb.present'] = "TRUE"
     vmx_skeleton['ehci.present'] = "TRUE"
     vmx_skeleton['tools.syncTime'] = "TRUE"
-    vmx_skeleton['scsi0.virtualDev'] = "pvscsi"
-    vmx_skeleton['scsi0.present'] = "TRUE"
     vmx_skeleton['disk.enableuuid'] = "TRUE"
 
     def __init__(self, hostname, username='root', password=None, name=None, moid=None):
@@ -742,6 +747,8 @@ class esxiFreeScraper(object):
             vmxDict.update({"sched.mem.minSize": hardware['memory_mb']})
         if 'firmware' in hardware:
             vmxDict.update({"firmware": hardware['firmware']})
+        if 'scsi' in hardware:
+            vmxDict.update({"scsi0.virtualDev": hardware['scsi']})
 
         # CDROM settings
         if cdrom:
