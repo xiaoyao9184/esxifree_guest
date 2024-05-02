@@ -133,6 +133,11 @@ options:
         - Override the SCSI controller scsi0 default value 'pvscsi'.
         type: str
         required: false
+      more_pci:
+        description: 
+        - Add more pci bridge devices.
+        type: bool
+        required: false
   guest_id:
     description:
     - Set the guest ID.
@@ -550,20 +555,13 @@ class esxiFreeScraper(object):
     vmx_skeleton['.encoding'] = "UTF-8"
     vmx_skeleton['config.version'] = "8"
     vmx_skeleton['pciBridge0.present'] = "TRUE"
-    vmx_skeleton['svga.present'] = "TRUE"
-    vmx_skeleton['svga.autodetect'] = "TRUE"
-    vmx_skeleton['pciBridge4.present'] = "TRUE"
-    vmx_skeleton['pciBridge4.virtualDev'] = "pcieRootPort"
-    vmx_skeleton['pciBridge4.functions'] = "8"
-    vmx_skeleton['pciBridge5.present'] = "TRUE"
-    vmx_skeleton['pciBridge5.virtualDev'] = "pcieRootPort"
-    vmx_skeleton['pciBridge5.functions'] = "8"
-    vmx_skeleton['pciBridge6.present'] = "TRUE"
-    vmx_skeleton['pciBridge6.virtualDev'] = "pcieRootPort"
-    vmx_skeleton['pciBridge6.functions'] = "8"
-    vmx_skeleton['pciBridge7.present'] = "TRUE"
-    vmx_skeleton['pciBridge7.virtualDev'] = "pcieRootPort"
-    vmx_skeleton['pciBridge7.functions'] = "8"
+    vmx_skeleton['pciBridge0.virtualDev'] = "pciRootBridge"
+    vmx_skeleton['pciBridge0.functions'] = "1"
+    vmx_skeleton['pciBridge0.pxm'] = "-1"
+    vmx_skeleton['pciBridge1.present'] = "TRUE"
+    vmx_skeleton['pciBridge1.virtualDev'] = "pciRootBridge"
+    vmx_skeleton['pciBridge1.functions'] = "1"
+    vmx_skeleton['pciBridge1:0.pxm'] = "0"
     vmx_skeleton['scsi0.present'] = "TRUE"
     vmx_skeleton['scsi0.virtualDev'] = "pvscsi"
     vmx_skeleton['vmci0.present'] = "TRUE"
@@ -571,8 +569,24 @@ class esxiFreeScraper(object):
     vmx_skeleton['floppy0.present'] = "FALSE"
     vmx_skeleton['usb.present'] = "TRUE"
     vmx_skeleton['ehci.present'] = "TRUE"
+    vmx_skeleton['svga.present'] = "TRUE"
+    vmx_skeleton['svga.autodetect'] = "TRUE"
     vmx_skeleton['tools.syncTime'] = "TRUE"
     vmx_skeleton['disk.enableuuid'] = "TRUE"
+
+    vmx_skeleton_more_pci = collections.OrderedDict()
+    vmx_skeleton_more_pci['pciBridge4.present'] = "TRUE"
+    vmx_skeleton_more_pci['pciBridge4.virtualDev'] = "pcieRootPort"
+    vmx_skeleton_more_pci['pciBridge4.functions'] = "8"
+    vmx_skeleton_more_pci['pciBridge5.present'] = "TRUE"
+    vmx_skeleton_more_pci['pciBridge5.virtualDev'] = "pcieRootPort"
+    vmx_skeleton_more_pci['pciBridge5.functions'] = "8"
+    vmx_skeleton_more_pci['pciBridge6.present'] = "TRUE"
+    vmx_skeleton_more_pci['pciBridge6.virtualDev'] = "pcieRootPort"
+    vmx_skeleton_more_pci['pciBridge6.functions'] = "8"
+    vmx_skeleton_more_pci['pciBridge7.present'] = "TRUE"
+    vmx_skeleton_more_pci['pciBridge7.virtualDev'] = "pcieRootPort"
+    vmx_skeleton_more_pci['pciBridge7.functions'] = "8"
 
     def __init__(self, hostname, username='root', password=None, name=None, moid=None):
         self.soap_client = vmw_soap_client(host=hostname, username=username, password=password)
@@ -749,6 +763,8 @@ class esxiFreeScraper(object):
             vmxDict.update({"firmware": hardware['firmware']})
         if 'scsi' in hardware:
             vmxDict.update({"scsi0.virtualDev": hardware['scsi']})
+        if 'more_pci' in hardware and hardware['more_pci'] in [True, 'TRUE', 'True', 'true', 'yes']:
+            vmxDict.update(esxiFreeScraper.vmx_skeleton_more_pci)            
 
         # CDROM settings
         if cdrom:
