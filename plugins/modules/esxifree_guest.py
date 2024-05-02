@@ -123,6 +123,11 @@ options:
         - Allow memory to be added while the virtual machine is running.
         type: bool
         required: false
+      firmware:
+        description: 
+        - UEFI or BIOS, emtpy is BIOS, 'efi' is UEFI.
+        type: str
+        required: false
   guest_id:
     description:
     - Set the guest ID.
@@ -724,6 +729,8 @@ class esxiFreeScraper(object):
             vmxDict.update({"sched.mem.pin": "TRUE"})
             vmxDict.update({"sched.mem.min": hardware['memory_mb']})
             vmxDict.update({"sched.mem.minSize": hardware['memory_mb']})
+        if 'firmware' in hardware:
+            vmxDict.update({"firmware": hardware['firmware']})
 
         # CDROM settings
         if cdrom:
