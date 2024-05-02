@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debug: esxifree_guest with tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "plugins/modules/esxifree_guest.py",
+            "console": "integratedTerminal",
+            "args": [
+                "console",
+                "${file}",
+                "${workspaceFolder}/tests/passwd.yml"
+            ]
+        }
+    ]
+}

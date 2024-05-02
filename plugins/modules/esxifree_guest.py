@@ -975,12 +975,20 @@ def main():
 
     if not (len(sys.argv) > 1 and sys.argv[1] == "console"):
         module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True, required_one_of=[['name', 'moid']])
-    else:
+    else:        
+        if len(sys.argv) <= 2:
+            raise Exception("Missing test file path, for example: esxifree_guest.py console tests/present-vm.yml tests/passwd.yml")
+
         # For testing without Ansible (e.g on Windows)
         module = cDummyAnsibleModule()
 
         with open(sys.argv[2], 'r') as file:
             module.params = yaml.safe_load(file)
+
+        if len(sys.argv) > 3:
+            with open(sys.argv[3], 'r') as file:
+                passwd = yaml.safe_load(file)
+                module.params.update(passwd)
 
         # ## Update VM
         # module.params = {
