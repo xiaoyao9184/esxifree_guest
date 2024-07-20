@@ -934,7 +934,7 @@ class esxiFreeScraper(object):
             else:
                 if disk['src']['copy_or_move'] == 'copy':
                     # clone the disk
-                    self.esxiCnx.exec_command("vmkfstools -i /vmfs/volumes/" + cloneSrcBackingFile.group('datastore') + "/" + cloneSrcBackingFile.group('fulldiskpath') + " -d thin " + path)
+                    self.esxiCnx.exec_command("vmkfstools -i /vmfs/volumes/" + cloneSrcBackingFile.group('datastore') + "/" + cloneSrcBackingFile.group('fulldiskpath') + " -d " + disk['type'] + " " + path)
                 else:
                     # rename the disk
                     self.esxiCnx.exec_command("vmkfstools -E /vmfs/volumes/" + cloneSrcBackingFile.group('datastore') + "/" + cloneSrcBackingFile.group('fulldiskpath') + " " + path)
