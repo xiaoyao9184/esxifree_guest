@@ -16,6 +16,7 @@ hardware:
   memory_mb: 4096
   memory_reservation_lock: true
   firmware: efi
+  more_pci: true
 disks:
   - size_gb: 20
     type: "thin"
@@ -73,6 +74,10 @@ cloudinit_userdata:
 
   package_update: true
 delete_cloudinit: False
-customvalues: []
+customvalues:
+  - key: "pcibridge0.present"
+    value: "FALSE"
+  - key: "pcibridge1.present"
+    value: "FALSE"
 wait: false
 wait_timeout: 180
